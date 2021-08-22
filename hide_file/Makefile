@@ -9,5 +9,6 @@ clean:
 test:
 	sudo dmesg -C
 	sudo insmod lkm_hide_file.ko
+	ls /home/ubuntu/Desktop/
 	sudo rmmod lkm_hide_file
 	sudo dmesg
