@@ -1,4 +1,5 @@
 obj-m += lkm_block_conn.o
+USEMODULE += posix
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
@@ -8,10 +9,6 @@ clean:
 	sudo dmesg -C
 test:
 	sudo dmesg -C
-	sudo python3 -m http.server 80 --bind 127.0.0.1 &
-	curl http://localhost:80/
+	sudo python3 -m http.server 80 --bind 0.0.0.0
 	sudo insmod lkm_block_conn.ko
-	curl http://localhost:80/
-	sudo rmmod lkm_block_conn
-	kill %1
-	sudo dmesg
+	# CURL FROM X.X.X.X

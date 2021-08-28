@@ -5,7 +5,7 @@
 #include <linux/net.h>
 #include <net/sock.h>
 
-#define BLOCK_IP "127.0.0.1"
+#define BLOCK_IP "X.X.X.X"
 
 MODULE_LICENSE("GPL");
 
@@ -16,14 +16,24 @@ static struct kprobe kp = {
     .symbol_name = "kallsyms_lookup_name"
 };
 
+struct proto_ops * inet_stream_ops;
+inet_accept_t inet_accept_org;
 extern unsigned long __force_order;
 static inline void mywrite_cr0(unsigned long value) {
   asm volatile("mov %0,%%cr0":"+r"(value),"+m"(__force_order));
 }
 
-struct proto_ops * inet_stream_ops;
-inet_accept_t inet_accept_org;
-  
+unsigned int inet_addr(char *str) {
+  int a, b, c, d;
+  char arr[4];
+  sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
+  arr[0] = a;
+  arr[1] = b;
+  arr[2] = c;
+  arr[3] = d;
+  return *(unsigned int *)arr;
+}
+
 static kallsyms_lookup_name_t get_lookup(void) {
   kallsyms_lookup_name_t kallsyms_lookup_name;
 
@@ -40,14 +50,15 @@ static kallsyms_lookup_name_t get_lookup(void) {
 
 int block_conn_inet_accept(struct socket *sock, struct socket *newsock, int flags, bool kern) {
   int fd;
-  printk(KERN_ALERT "client address: %lu", (unsigned long) &newsock->sk->__sk_common.skc_daddr);
+  unsigned int client_address;
   fd = inet_accept_org(sock, newsock, flags, kern);
-  /*
-  if (memcmp(client_addr, BLOCK_IP) == 0) {
+  client_address = (unsigned int) newsock->sk->__sk_common.skc_daddr;
+
+  if (client_address == inet_addr(BLOCK_IP)) {
     return -EINVAL;
   }
-  */
-  return fd
+ 
+  return fd;
 }
 
 static int __init hello_init(void) {
@@ -65,7 +76,6 @@ static int __init hello_init(void) {
   inet_accept_org = inet_stream_ops->accept;
   inet_stream_ops->accept = &block_conn_inet_accept;
   mywrite_cr0(orig_cr0);
-  printk(KERN_ALERT "%lu", (unsigned long int)inet_accept_org);
   return 0;
 }
 
